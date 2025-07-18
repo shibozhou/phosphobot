@@ -839,13 +839,17 @@ export default function GamepadControlPage() {
             openStateRef.current = gripperValue;
           }
 
-          // Apply speed scaling to all robot types
-          deltaX *= selectedSpeed;
-          deltaY *= selectedSpeed;
-          deltaZ *= selectedSpeed;
-          deltaRX *= selectedSpeed;
-          deltaRY *= selectedSpeed;
-          deltaRZ *= selectedSpeed;
+          // Apply speed scaling for mobile robots
+          const currentRobot = serverStatus?.robot_status.find(
+            (r) => r.device_name === selectedRobotName,
+          );
+          const isMobile = currentRobot?.robot_type === "mobile";
+
+          if (isMobile) {
+            deltaX *= selectedSpeed;
+            deltaY *= selectedSpeed;
+            deltaRZ *= selectedSpeed;
+          }
 
           if (
             deltaX !== 0 ||
@@ -1059,7 +1063,10 @@ export default function GamepadControlPage() {
   if (serverError) return <div>Failed to load server status.</div>;
   if (!serverStatus) return <LoadingPage />;
 
-
+  const selectedRobot = serverStatus.robot_status.find(
+    (robot) => robot.device_name === selectedRobotName,
+  );
+  const isMobileRobot = selectedRobot?.robot_type === "mobile";
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">
@@ -1130,14 +1137,16 @@ export default function GamepadControlPage() {
                 Start Moving Robot
               </Button>
             )}
-            <SpeedSelect
-              defaultValue={selectedSpeed}
-              onChange={(newSpeed) => setSelectedSpeed(newSpeed)}
-              title="Movement speed"
-              minSpeed={0.1}
-              maxSpeed={2.0} // Allow faster speeds for all robot types
-              step={0.1}
-            />
+            {isMobileRobot && (
+              <SpeedSelect
+                defaultValue={selectedSpeed}
+                onChange={(newSpeed) => setSelectedSpeed(newSpeed)}
+                title="Movement speed"
+                minSpeed={0.1}
+                maxSpeed={1.0}
+                step={0.1}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1363,13 +1372,19 @@ export default function GamepadControlPage() {
                                 data.rz = moveAmount * 3.14;
                               }
 
-                              // Apply speed scaling to all robot types
-                              data.x *= selectedSpeed;
-                              data.y *= selectedSpeed;
-                              data.z *= selectedSpeed;
-                              data.rx *= selectedSpeed;
-                              data.ry *= selectedSpeed;
-                              data.rz *= selectedSpeed;
+                              // Apply speed scaling for mobile robots
+                              const currentRobot =
+                                serverStatus?.robot_status.find(
+                                  (r) => r.device_name === selectedRobotName,
+                                );
+                              const isMobile =
+                                currentRobot?.robot_type === "mobile";
+
+                              if (isMobile) {
+                                data.x *= selectedSpeed;
+                                data.y *= selectedSpeed;
+                                data.rz *= selectedSpeed;
+                              }
 
                               postData(BASE_URL + "move/relative", data, {
                                 robot_id: robotIDFromName(selectedRobotName),
