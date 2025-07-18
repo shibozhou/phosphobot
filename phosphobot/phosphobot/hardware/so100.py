@@ -554,15 +554,12 @@ class SO100Hardware(BaseManipulator):
         while control_signal.is_in_loop():
             start_time = time.time()
 
-            # Get leader's current joint positions
             pos_rad = self.read_joints_position(unit="rad")
 
-            # Update Mujoco simulation for gravity calculation
             for i, idx in enumerate(joint_indices):
                 self.sim.set_joint_state(self.p_robot_id, idx, pos_rad[i])
             self.sim.step()
 
-            # Calculate gravity compensation torque
             positions = list(pos_rad)
             velocities = [0.0] * num_joints
             accelerations = [0.0] * num_joints

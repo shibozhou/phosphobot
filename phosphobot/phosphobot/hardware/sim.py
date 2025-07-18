@@ -65,7 +65,6 @@ class MuJoCoSimulation:
                 logger.debug("Simulation: headless mode enabled")
                 
             elif self.sim_mode == "gui":
-                # Launch GUI viewer using external process (like PyBullet did)
                 self._start_gui_process()
                 logger.debug("Simulation: GUI mode enabled")
                 
@@ -99,7 +98,7 @@ class MuJoCoSimulation:
                 except Exception as exc:
                     logger.warning(f"Error while reading child stdout: {exc}")
 
-            # Start MuJoCo simulation server
+            # start mujoco 
             self._gui_proc = subprocess.Popen(
                 ["uv", "run", "python", "main.py"],
                 cwd=absolute_path,
@@ -170,7 +169,6 @@ class MuJoCoSimulation:
         for _ in range(steps):
             mujoco.mj_step(self.model, self.data)
             
-        # Update viewer if available
         if self.viewer and hasattr(self.viewer, 'sync'):
             self.viewer.sync()
 
@@ -250,29 +248,25 @@ class MuJoCoSimulation:
             return None, 0, []
 
         try:
-            # Check if we have a MuJoCo XML version of this model
+            # check if we have a MuJoCo XML version of this model
             urdf_dir = Path(urdf_path).parent
             mjcf_path = urdf_dir / "robot.xml"
             
             if mjcf_path.exists():
-                # Load the MuJoCo format directly
                 logger.info(f"Loading MuJoCo model: {mjcf_path}")
                 
-                # Load model with assets from the directory
                 model_xml = mjcf_path.read_text()
                 assets = {}
                 
-                # Load mesh files referenced in the XML
                 for mesh_file in urdf_dir.glob("*.stl"):
                     assets[mesh_file.name] = mesh_file.read_bytes()
                 
                 model = mujoco.MjModel.from_xml_string(model_xml, assets)
                 
-                # Update the simulation with the new model
                 self.model = model
                 self.data = mujoco.MjData(model)
                 
-                # Restart viewer if in GUI mode
+                # restart viewer if in GUI mode
                 if self.sim_mode == "gui" and self.viewer:
                     self.viewer.close()
                     self.viewer = mujoco.viewer.launch_passive(self.model, self.data)
@@ -282,7 +276,6 @@ class MuJoCoSimulation:
                 logger.warning(f"No MuJoCo XML found for {urdf_path}. Using basic simulation.")
                 return None, 0, []
 
-            # Find actuated joints
             actuated_joints = []
             for i in range(model.njnt):
                 if model.jnt_type[i] in [mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE]:
@@ -391,7 +384,7 @@ class MuJoCoSimulation:
             return []
 
         try:
-            # MuJoCo IK implementation would go here
+            # TODO: MuJoCo IK implementation would go here
             # For now, return rest poses as fallback
             logger.debug("MuJoCo IK not yet fully implemented, returning rest poses")
             return rest_poses
@@ -463,7 +456,6 @@ class MuJoCoSimulation:
             
         return []
 
-    # Debug and utility methods (simplified for compatibility)
     def add_debug_text(self, text: str, text_position, text_color_RGB: list, life_time: int = 3):
         """Add debug text to the simulation."""
         logger.debug(f"Debug text: {text} at {text_position}")
