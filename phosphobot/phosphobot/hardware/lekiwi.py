@@ -101,15 +101,11 @@ class LeKiwi(BaseMobileRobot):
         Get the observation of the robot.
 
         Returns:
-            - state: Current robot position [x, y, z] and orientation [roll, pitch, yaw]
-            - joints_position: Last movement command as action data [x, y, z, roll, pitch, yaw]
+            - state: Last movement command position [x, y, z] and orientation [roll, pitch, yaw]
+            - joints_position: Empty array as we're not tracking joint positions for mobile robots
         """
-        # Return the current state as observation
-        # Combine position and orientation into a 6D state vector
-        state = np.concatenate([self.current_position, self.current_orientation])
-        
-        # Return last movement command as action data (what we did to get to this state)
-        joints_position = self.last_movement_command.copy()
+        state = self.last_movement_command.copy()
+        joints_position = np.array([])
 
         return state, joints_position
 

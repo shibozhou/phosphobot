@@ -126,34 +126,57 @@ async def start_recording_episode(
             if is_github_actions() and number_of_connected_cameras == 0:
                 number_of_connected_cameras += 2
 
-            # get expected action shape based on connected robots
+            # get expected action shape based on connected robots and active control signals
             expected_action_shape = 0
+            
+            from phosphobot.endpoints.control import (
+                ai_control_signal,
+                leader_follower_control,
+                vr_control_signal,
+            )
+            
+            # check if any control signals are active 
+            is_simulation_mode = (
+                ai_control_signal.is_in_loop()
+                or leader_follower_control.is_in_loop()
+                or vr_control_signal.is_in_loop()
+            )
+            
             for robot in robots_to_record:
-                try:
-                    robot_info = robot.get_info_for_dataset()
-                    expected_action_shape += robot_info.action.shape[0]
-                except Exception as e:
-                    logger.warning(f"Could not get dataset info for robot {robot.name}: {e}")
-                    from phosphobot.hardware.base import BaseManipulator, BaseMobileRobot
-                    
-                    if isinstance(robot, BaseManipulator) and hasattr(robot, 'SERVO_IDS'):
-                        # manipulator robots with known SERVO_IDS
-                        expected_action_shape += len(robot.SERVO_IDS)
-                    elif isinstance(robot, BaseMobileRobot):
-                        # mobile robots (UnitreeGo2, LeKiwi) use 6D
-                        expected_action_shape += 6
-                    elif hasattr(robot, 'name') and robot.name == 'phosphobot':
-                        # RemotePhosphobot - try to get actual DOF, fallback to 6
-                        try:
-                            if hasattr(robot, 'actuated_joints'):
-                                expected_action_shape += len(robot.actuated_joints)
-                            else:
-                                expected_action_shape += 6
-                        except Exception:
+                from phosphobot.hardware.base import BaseManipulator, BaseMobileRobot
+                
+                if isinstance(robot, BaseManipulator):
+                    # for manipulators, use control signal logic to match get_observation behavior
+                    if is_simulation_mode:
+                        if hasattr(robot, 'num_actuated_joints'):
+                            expected_action_shape += robot.num_actuated_joints
+                        elif hasattr(robot, 'actuated_joints'):
+                            expected_action_shape += len(robot.actuated_joints)
+                        else:
+                            # fallback
                             expected_action_shape += 6
                     else:
-                        # unknown robot type - conservative fallback
-                        logger.warning(f"Unknown robot type {robot.__class__.__name__}, assuming 6 DOF")
+                        # Manual mode: use SERVO_IDS (direct motor reading)
+                        if hasattr(robot, 'SERVO_IDS'):
+                            expected_action_shape += len(robot.SERVO_IDS)
+                        else:
+                            expected_action_shape += 6
+                elif isinstance(robot, BaseMobileRobot):
+                    expected_action_shape += 6
+                elif hasattr(robot, 'name') and robot.name == 'phosphobot':
+                    try:
+                        robot_info = robot.get_info_for_dataset()
+                        expected_action_shape += robot_info.action.shape[0]
+                    except Exception as e:
+                        logger.warning(f"Could not get dataset info for RemotePhosphobot {robot.name}: {e}")
+                        expected_action_shape += 6
+                else:
+                    # Unknown robot type - try get_info_for_dataset first, then fallback
+                    try:
+                        robot_info = robot.get_info_for_dataset()
+                        expected_action_shape += robot_info.action.shape[0]
+                    except Exception as e:
+                        logger.warning(f"Could not get dataset info for robot {robot.name}: {e}")
                         expected_action_shape += 6
                         
             dataset_action_shape = info_model.features.action.shape[0]
