@@ -14,6 +14,7 @@ import { ProtectedRoute } from "@/pages/auth/ProtectedRoute";
 import { ResetPassword } from "@/pages/auth/ResetPassword";
 import { CalibrationPage } from "@/pages/calibration/CalibrationPage";
 import { ControlPage } from "@/pages/control/ControlPage";
+import { WebXRControlPage } from "@/pages/control/WebXRControlPage";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<DashboardPage />} />
           <Route path="/control" element={<ControlPage />} />
+          <Route path="/control/webxr" element={<WebXRControlPage />} />
           <Route path="/browse" element={<BrowsePage />} />
           <Route path="/browse/:path" element={<BrowsePage />} />
           <Route

@@ -225,6 +225,8 @@ export function TopBar() {
     isPrefix ? currentPath.startsWith(path) : currentPath === path,
   );
 
+  const isWebXRPage = currentPath === "/control/webxr";
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex flex-col md:flex-row justify-between items-center gap-4 p-4 bg-background border-b">
       {currentPath === "/" && (
@@ -245,10 +247,14 @@ export function TopBar() {
       <div className="flex items-center gap-2 md:w-auto">
         {/* Back button on mobile */}
         <MobileMenu />
-        <ServerIP />
-        <AIControlStatus />
-        <RecordingStatus />
-        <RobotStatusDropdown />
+        {!isWebXRPage && (
+          <>
+          <ServerIP />
+          <AIControlStatus />
+          <RecordingStatus />
+          <RobotStatusDropdown />
+          </>
+        )}
         <Button variant="outline" asChild>
           <a
             href="https://docs.phospho.ai/welcome"

@@ -15,6 +15,7 @@ import {
   Dumbbell,
   FileCog,
   FolderOpen,
+  Gamepad2,
   Home,
   Network,
   Play,
@@ -57,6 +58,17 @@ export function AppSidebar() {
                   <a href="/control">
                     <Play className="h-5 w-5 text-green-500" />
                     <span>Control Robot</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={currentPath === "/control/webxr"}
+                >
+                  <a href="/control/webxr">
+                    <Gamepad2 className="h-5 w-5" />
+                    <span>WebXR Control</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
